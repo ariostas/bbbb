@@ -2,7 +2,7 @@
  * diHiggs.C
  * 
  * This macro analyses signal and background samples for bbbb in the boosted regime.
- * To run use "root diHiggs.C"
+ * To run use "root bbbb.C"
  * 
  * Code by: Andres Rios
  */
@@ -117,8 +117,8 @@ void analyzeS()
 		for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) {// Jet loop
 			
 			jet = (Jet*) branchJet->At(iJet);
-			vJet.SetPtEtaPhiM(jet->PT, jet->Eta, jet->Phi, jet->M);
-			particles.push_back( PseudoJet(vJet.PX(),  vJet.PY(),  vJet.PZ(), vJet.E()) );
+			vJet.SetPtEtaPhiM(jet->PT, jet->Eta, jet->Phi, jet->Mass);
+			particles.push_back( PseudoJet(vJet.Px(),  vJet.Px(),  vJet.Px(), vJet.E()) );
 			
 			if(jet->BTag){
 				if(nbJet1 == -1){
@@ -191,16 +191,16 @@ void analyzeS()
 		
 		// Choose a jet definition
 		double R = 1.2;
-		JetDefinition jet_def(cambridge_algorithm, R);
+		JetDefinition jet_def_fat(cambridge_algorithm, R);
 		
 		// Run the clustering, extract the jets
-		ClusterSequence cs(particles, jet_def);
-		vector<PseudoJet> jets = sorted_by_pt(cs.inclusive_jets());
+		ClusterSequence cs_fat(particles, jet_def_fat);
+		vector<PseudoJet> fat_jets = sorted_by_pt(cs_fat.inclusive_jets());
 		
 		
 		// Check for two fat jets with Pt > 200
-		if(jets.size() >= 2) continue;
-		if((jets[0].pt() > 200) && (jets[1].pt() > 200)) continue;
+		if(!(fat_jets.size() >= 2)) continue;
+		if(!((fat_jets[0].pt() > 200) && (fat_jets[1].pt() > 200))) continue;
 		
 		
 		// Check for no isolated leptons
@@ -210,13 +210,20 @@ void analyzeS()
 		
 		
 		// Check for a difference in rapidity of less than 2.5
-		if(fabs(jets[0].rapidity()-jets[1].rapidity()) < 2.5) continue;
+		if(!(fabs(fat_jets[0].rapidity() - fat_jets[1].rapidity()) < 2.5)) continue;
 		
 		// Check for four bjets with pt > 40
-		if((nbJet1 != -1) && (nbJet2 != -1) && (nbJet3 != -1) && (nbJet4 != -1)) continue;
-		if((bJet1->PT > 40) && (bJet2->PT > 40) && (bJet3->PT > 40) && (bJet4->PT > 40)) continue;
+		if(!((nbJet1 != -1) && (nbJet2 != -1) && (nbJet3 != -1) && (nbJet4 != -1))) continue;
+		if(!((bJet1->PT > 40) && (bJet2->PT > 40) && (bJet3->PT > 40) && (bJet4->PT > 40))) continue;
 		
-		// Construct micro-jets with kt algorithm
+		// Construct micro-jets with Cambridge/Aachen algorithm
+		R = 0.2
+		JetDefinition jet_def_micro(cambridge_algorithm, R);
+		ClusterSequence cs_micro(particles, jet_def_micro);
+		vector<PseudoJet> micro_jets = sorted_by_pt(cs_micro.inclusive_jets());
+		
+		// Use BDRS and/or Shower Deconstruction method
+		
 		
 		
 		
